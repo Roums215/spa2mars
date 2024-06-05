@@ -1,0 +1,81 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+
+    font-family: Arial, sans-serif;
+    background-image: url('../img/sleep.jpg');
+    background-size: cover;
+    background-position: center;
+}
+.navbar {
+    background-color: transparent;
+    padding: 10px;
+    text-align: center;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    margin-top: 15px; 
+}
+.navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    height: 50px; /* Hauteur augmentée de la navbar ul */
+    line-height: 50px; /* Assure le centrage vertical du texte */
+    display: flex; /* Utilisation de flexbox pour aligner le logo et les éléments de la navbar */
+    align-items: center; /* Centrage vertical */
+}
+.navbar li {
+    display: inline-block;
+    margin-right: 162px;
+}
+.navbar a {
+    color: #FF8A00;
+    text-decoration: none;
+    font-size: 30px;
+    text-shadow: -1px -1px 0 #000,  
+                 1px -1px 0 #000,
+                -1px 1px 0 #000,
+                 1px 1px 0 #000; /* Contours des lettres */
+}
+.navbar img {
+    height: 110px;
+    margin-top: 60px;
+    margin-right: 62px; 
+}
+
+.contact-info {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 300px;
+}
+
+.contact-info h2 {
+    margin-top: 0;
+}
+
+.contact-info p {
+    margin: 10px 0;
+}
+
+button {
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    background-color: #3c3cff;
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #4a4afe;
+}

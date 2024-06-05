@@ -1,0 +1,60 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+
+.form-container {
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #FFDFD8;
+    border-radius: 10px;
+    border-style: solid;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 600px;
+}
+
+.form-container label {
+    display: block;
+    margin: 10px 0 5px;
+}
+
+.form-container input, .form-container select, .form-container button {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border: 1px solid #CCC;
+}
+
+.form-container button {
+    background-color: #FF8A00;
+    color: #FFF;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.form-container button:hover {
+    background-color: #E67600;
+}
+
+.animal-list ul, .consultation-list ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.animal-list li, .consultation-list li {
+    background-color: #FFDFD8;
+    margin: 10px 200px;
+    border-style: solid;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.animal-list img {
+    max-width: 100px;
+    border-radius: 5px;
+}
