@@ -17,10 +17,10 @@ body {
     list-style-type: none;
     margin: 0;
     padding: 0;
-    height: 50px; /* Hauteur augmentée de la navbar ul */
-    line-height: 50px; /* Assure le centrage vertical du texte */
-    display: flex; /* Utilisation de flexbox pour aligner le logo et les éléments de la navbar */
-    align-items: center; /* Centrage vertical */
+    height: 50px; 
+    line-height: 50px; 
+    display: flex; 
+    align-items: center; 
 }
 .navbar li {
     display: inline-block;
@@ -33,7 +33,7 @@ body {
     text-shadow: -1px -1px 0 #000,  
                  1px -1px 0 #000,
                 -1px 1px 0 #000,
-                 1px 1px 0 #000; /* Contours des lettres */
+                 1px 1px 0 #000; 
 }
 .navbar img {
     height: 110px;
@@ -45,7 +45,7 @@ body {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    height: 100vh; /* Assurez-vous que la hauteur est définie pour voir l'image de fond */
+    height: 100vh; 
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -55,7 +55,7 @@ body {
     max-width: 800px;
     margin: auto;
     text-align: center;
-    background-color: rgba(255, 255, 255, 0.8); /* Ajoute un fond blanc semi-transparent pour une meilleure lisibilité */
+    background-color: rgba(255, 255, 255, 0.8); 
     padding: 20px;
     border-radius: 10px;
 }

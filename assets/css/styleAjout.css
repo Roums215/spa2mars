@@ -54,7 +54,7 @@ button:hover {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     margin-top: 20px;
     border-radius: 8px;
-    text-align: center; /* Centrer le texte */
+    text-align: center;
 }
 
 .animal-list ul {

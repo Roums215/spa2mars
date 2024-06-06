@@ -1,5 +1,4 @@
 <?php
-// Connexion à la base de données
 $servername = "mysql-portfolio215.alwaysdata.net";
 $username = "343348_";
 $password = "BTSsio123!";
@@ -16,7 +15,7 @@ $animal = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['animal_id'])) {
     $animal_id = $_POST['animal_id'];
 
-    // Requête pour récupérer les informations de l'animal
+    // Info animal
     $sql = "SELECT * FROM animal WHERE Id_Animal = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $animal_id);
@@ -58,7 +57,6 @@ $conn->close();
             <p>Âge: <?php echo htmlspecialchars($animal['AnAge']); ?></p>
             <p>Date de naissance: <?php echo htmlspecialchars($animal['dateNaiss']); ?></p>
             <p>Puce: <?php echo htmlspecialchars($animal['AnPuce']); ?></p>
-            <!-- Ajoutez vos informations de contact ici -->
             <p>Email: contact@spa2mars.com</p>
             <p>Téléphone: 01 23 45 67 89</p>
         </div>

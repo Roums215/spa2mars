@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
     $email = htmlspecialchars($_POST['email']);
 
-    // Préparation de la requête
+    //requête
     $stmt = $conn->prepare("INSERT INTO utilisateur (UNom, UAge, UTel, UPrenom, UAdress, mdp, email) VALUES (?, ?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("siissss", $firstname, $age, $number, $lastname, $street, $password, $email);
 

@@ -1,5 +1,4 @@
 <?php
-// Connexion à la base de données
 $servername = "mysql-portfolio215.alwaysdata.net";
 $username = "343348_";
 $password = "BTSsio123!";
@@ -10,7 +9,7 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Requête pour récupérer les informations des animaux avec une consultation et sans Id_Utilisateur
+// Animaux avec consultation et sans Id_Utilisateur
 $sql = "SELECT animal.*, consultation.Id_Consultation 
         FROM animal 
         INNER JOIN effectuer ON animal.Id_Animal = effectuer.Id_Animal
@@ -48,7 +47,6 @@ $result = $conn->query($sql);
 </div>
 <div class="card-container">
     <?php
-    // Affichage des informations des animaux dans des cartes
     if ($result->num_rows > 0) {
         while($row = $result->fetch_assoc()) {
             echo "<div class='card'>";
@@ -56,20 +54,20 @@ $result = $conn->query($sql);
             echo "<p>Age: " . $row["AnAge"] . "</p>";
             echo "<p>Date de naissance: " . $row["dateNaiss"] . "</p>";
             echo "<p>Puce: " . $row["AnPuce"] . "</p>";
-            // Vérification si l'animal a une photo
+            // VErif si photo
             if (!empty($row["image_filename"])) {
                 $image_path = "photos_animaux/" . $row["image_filename"];
                 echo "<img src='" . $image_path . "' alt='Photo de l'animal' class='photo'>";
             } else {
                 echo "<p>Aucune photo disponible.</p>";
-                // Formulaire pour ajouter une photo
+
                 echo "<form action='upload_image.php' method='post' enctype='multipart/form-data' class='upload-form'>";
                 echo "<input type='hidden' name='animal_id' value='" . $row["Id_Animal"] . "'>";
                 echo "<input type='file' name='image' accept='image/*' required>";
                 echo "<button type='submit'>Ajouter une photo</button>";
                 echo "</form>";
             }
-            // Bouton pour prendre contact pour l'adoption
+
             echo "<form action='contact.php' method='post'>";
             echo "<input type='hidden' name='animal_id' value='" . $row["Id_Animal"] . "'>";
             echo "<button type='submit' class='contact-button'>Prendre Contact</button>";
@@ -85,6 +83,5 @@ $result = $conn->query($sql);
 </html>
 
 <?php
-// Fermeture de la connexion à la base de données
 $conn->close();
 ?>

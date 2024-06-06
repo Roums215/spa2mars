@@ -1,5 +1,5 @@
 <?php
-// Connexion à la base de données
+// bdd
 $servername = "mysql-portfolio215.alwaysdata.net";
 $username = "343348_";
 $password = "BTSsio123!";
@@ -17,13 +17,12 @@ if (!isset($_SESSION['Id_Utilisateur'])) {
 }
 
 $userId = $_SESSION['Id_Utilisateur'];
-$username = $_SESSION['UNom']; // Assuming the username is stored in the session
+$username = $_SESSION['UNom']; 
 
-// Vérifier si le formulaire a été soumis
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image']) && isset($_POST['animalName'])) {
     $target_dir = "photos_utilisateurs/";
     
-    // Vérifier si le dossier existe, sinon le créer
+    // Verif existe, sinon le créer
     if (!is_dir($target_dir)) {
         mkdir($target_dir, 0777, true);
     }
@@ -69,7 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image']) && isset($_
             $animalName = $_POST['animalName'];
             $userName = $_SESSION['UNom'];
 
-            // Insérer les informations de la photo dans la base de données
             $stmt = $conn->prepare("INSERT INTO user_photos (userId, userName, animalName, filePath) VALUES (?, ?, ?, ?)");
             $stmt->bind_param("isss", $userId, $userName, $animalName, $target_file);
             $stmt->execute();
@@ -80,7 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image']) && isset($_
     }
 }
 
-// Requête pour récupérer les photos des utilisateurs
 $sql = "SELECT * FROM user_photos";
 $result = $conn->query($sql);
 
@@ -115,7 +112,6 @@ $conn->close();
 
      
     </div>
-    <!-- Formulaire pour télécharger une photo -->
     <div class="container">
             <h2>Ajouter une photo de votre animal adopté</h2>
             <form action="monCompte.php" method="post" enctype="multipart/form-data">
@@ -127,10 +123,8 @@ $conn->close();
             </form>
         </div>
 
-        <!-- Affichage des photos des utilisateurs -->
         <div class="card-container">
             <?php
-            // Affichage des informations des photos des utilisateurs dans des cartes
             if ($result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
                     echo "<div class='card'>";

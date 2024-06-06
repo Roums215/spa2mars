@@ -20,12 +20,12 @@ if (isset($_POST['animal']) && isset($_POST['consultation']) && isset($_POST['ve
     $consultationId = $_POST['consultation'];
     $veterinaireId = $_POST['veterinaire'];
 
-    // Insérer dans la table effectuer
+    // dans la table effectuer
     $stmt = $conn->prepare("INSERT INTO effectuer (Id_Animal, Id_Consultation) VALUES (?, ?)");
     $stmt->bind_param("ii", $animalId, $consultationId);
 
     if ($stmt->execute()) {
-        // Mettre à jour la consultation du vétérinaire
+        // Màj
         $stmt = $conn->prepare("UPDATE veterinaire SET Id_Consultation = ? WHERE Id_Veterinaire = ?");
         $stmt->bind_param("ii", $consultationId, $veterinaireId);
         

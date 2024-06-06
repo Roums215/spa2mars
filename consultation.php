@@ -135,6 +135,26 @@ if ($conn->connect_error) {
                 }
                 ?>
             </div>
+            <h2>Liste des Vétérinaires</h2>
+            <div class="consultation-list">
+                <?php
+                $sql = "SELECT Id_Veterinaire, NomMedecin FROM veterinaire";
+                $result = $conn->query($sql);
+
+                if ($result->num_rows > 0) {
+                    echo "<ul>";
+                    while ($row = $result->fetch_assoc()) {
+                        echo "<li>
+                                <strong>Vétérinaire ID:</strong> " . $row["Id_Veterinaire"] . "<br>
+                                <strong>Nom:</strong> " . $row["NomMedecin"] . "
+                              </li>";
+                    }
+                    echo "</ul>";
+                } else {
+                    echo "Aucun vétérinaire trouvé.";
+                }
+                ?>
+            </div>
         </div>
     </div>
 </body>

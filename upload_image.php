@@ -1,5 +1,4 @@
 <?php
-// upload_image.php
 $servername = "mysql-portfolio215.alwaysdata.net";
 $username = "343348_";
 $password = "BTSsio123!";
@@ -16,22 +15,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["image"]) && isset($_P
     $target_file = $target_dir . basename($_FILES["image"]["name"]);
     $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
     
-    // Check if image file is a actual image or fake image
     $check = getimagesize($_FILES["image"]["tmp_name"]);
     if($check !== false) {
-        // Check file size
         if ($_FILES["image"]["size"] > 5000000) {
-            echo "Sorry, your file is too large.";
+            echo "Erreur, trop grand format.";
             exit;
         }
-        // Allow certain file formats
         if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg") {
-            echo "Sorry, only JPG, JPEG, & PNG files are allowed.";
+            echo "Mauvais format";
             exit;
         }
-        // Move uploaded file to target directory
         if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
-            // Update database with the image file name
             $sql = "UPDATE animal SET image_filename='" . basename($_FILES["image"]["name"]) . "' WHERE Id_Animal=" . $animal_id;
             if ($conn->query($sql) === TRUE) {
                 echo "The file ". htmlspecialchars(basename($_FILES["image"]["name"])). " has been uploaded.";
@@ -39,16 +33,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["image"]) && isset($_P
                 echo "Error updating record: " . $conn->error;
             }
         } else {
-            echo "Sorry, there was an error uploading your file.";
+            echo "Désolé, il y a une erreur lors du téléchargement";
         }
     } else {
-        echo "File is not an image.";
+        echo "Erreur";
     }
 }
 
 $conn->close();
 
-// Redirection après l'upload de l'image
 header("Location: pageAdoption.php");
 exit();
 ?>
