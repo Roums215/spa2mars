@@ -120,3 +120,14 @@ body {
 .contact-button:hover {
     background-color: #ff7b00;
 }
+
+/* Responsive */
+@media (max-width: 600px) {
+    .card {
+        width: 100%;
+    }
+
+    .upload-form {
+        width: 90%;
+    }
+}

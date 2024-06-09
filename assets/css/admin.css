@@ -4,7 +4,6 @@ body {
     font-family: Arial, sans-serif;
 }
 
-
 .form-container {
     margin: 20px auto;
     padding: 20px;
@@ -47,7 +46,7 @@ body {
 
 .animal-list li, .consultation-list li {
     background-color: #FFDFD8;
-    margin: 10px 200px;
+    margin: 10px 20px;
     border-style: solid;
     padding: 10px;
     border-radius: 5px;
@@ -57,4 +56,11 @@ body {
 .animal-list img {
     max-width: 100px;
     border-radius: 5px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .animal-list li, .consultation-list li {
+        margin: 10px 5px;
+    }
 }

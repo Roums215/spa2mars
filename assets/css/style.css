@@ -5,12 +5,11 @@ body {
     height: 100vh;
     margin: 0;
     font-family: Arial, sans-serif;
-
-    font-family: Arial, sans-serif;
     background-image: url('../img/sleep.jpg');
     background-size: cover;
     background-position: center;
 }
+
 .navbar {
     background-color: transparent;
     padding: 10px;
@@ -21,19 +20,22 @@ body {
     z-index: 1000;
     margin-top: 15px; 
 }
+
 .navbar ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
-    height: 50px; /* Hauteur augmentée de la navbar ul */
-    line-height: 50px; /* Assure le centrage vertical du texte */
-    display: flex; /* Utilisation de flexbox pour aligner le logo et les éléments de la navbar */
-    align-items: center; /* Centrage vertical */
+    height: 50px;
+    line-height: 50px;
+    display: flex;
+    align-items: center;
 }
+
 .navbar li {
     display: inline-block;
     margin-right: 162px;
 }
+
 .navbar a {
     color: #FF8A00;
     text-decoration: none;
@@ -41,8 +43,9 @@ body {
     text-shadow: -1px -1px 0 #000,  
                  1px -1px 0 #000,
                 -1px 1px 0 #000,
-                 1px 1px 0 #000; /* Contours des lettres */
+                 1px 1px 0 #000; 
 }
+
 .navbar img {
     height: 110px;
     margin-top: 60px;
@@ -78,4 +81,28 @@ button {
 
 button:hover {
     background-color: #4a4afe;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .navbar ul {
+        flex-direction: column;
+        height: auto;
+        line-height: normal;
+    }
+
+    .navbar li {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+
+    .navbar a {
+        font-size: 20px;
+    }
+
+    .navbar img {
+        height: 80px;
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
 }

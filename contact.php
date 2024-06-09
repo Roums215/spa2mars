@@ -45,7 +45,7 @@ $conn->close();
         <div class="navbar">
             <ul>
                 <li><img src="assets/img/accueil.png" alt="Logo"></li>
-                <li><a href="Accueil.php">Accueil</a></li>
+                <li><a href="index.html">Accueil</a></li>
                 <li><a href="pageAdoption.php">J'adopte</a></li>
                 <li><a href="monCompte.php">Mon compte</a></li>
                 <li><a href="deconnexion.php">Déconnexion</a></li>

@@ -63,3 +63,10 @@ button {
 button:hover {
     background-color: #4a4afe;
 }
+
+/* Responsive */
+@media (max-width: 600px) {
+    .form-container {
+        width: 90%;
+    }
+}

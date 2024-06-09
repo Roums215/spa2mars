@@ -78,3 +78,19 @@ button:hover {
     width: 150px;
     text-align: left;
 }
+
+/* Responsive */
+@media (max-width: 600px) {
+    form {
+        width: 90%;
+    }
+
+    .consultation-list {
+        width: 90%;
+    }
+
+    .consultation-list li strong {
+        width: auto;
+        display: block;
+    }
+}
