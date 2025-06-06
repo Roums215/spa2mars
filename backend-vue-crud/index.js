@@ -1,0 +1,871 @@
+// /backend-vue-crud/index.js
+const express = require('express');
+const mysql = require('mysql2');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
+
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+
+// Connexion MySQL
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'spa2mars'
+});
+
+db.connect(err => {
+  if(err) throw err;
+  console.log('Connecté à MySQL spa2mars');
+});
+
+// Configuration de multer pour les images d'animaux
+const animalStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = 'public/images/';
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  }
+});
+
+const upload = multer({ storage: animalStorage });
+
+// Configuration de multer pour les photos d'utilisateurs
+const userPhotoStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = 'public/photos_utilisateurs';
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+const uploadUserPhoto = multer({ storage: userPhotoStorage });
+
+// =============================================
+// ROUTE INSCRIPTION ADMIN (hash mot de passe)
+// =============================================
+app.post('/api/admins/register', (req, res) => {
+  const { email, mdp, ANom, APrenom } = req.body;
+  if (!email || !mdp || !ANom || !APrenom) {
+    return res.status(400).json({ error: 'Paramètres manquants' });
+  }
+
+  // Hasher le mot de passe
+  bcrypt.hash(mdp, 10, (err, hashedPassword) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erreur de hachage' });
+    }
+
+    // Insérer admin en BD
+    const sql = `INSERT INTO admin (ANom, APrenom, email, mdp)
+                 VALUES (?, ?, ?, ?)`;
+    db.query(sql, [ANom, APrenom, email, hashedPassword], (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Erreur serveur lors de l\'insertion' });
+      }
+      res.json({ message: 'Inscription admin réussie !' });
+    });
+  });
+});
+
+// =============================================
+// ROUTE CONNEXION ADMIN (vérif mot de passe)
+// =============================================
+app.post('/api/admins/login', (req, res) => {
+  const { email, mdp } = req.body;
+  if (!email || !mdp) {
+    return res.status(400).json({ error: 'Email et mot de passe requis' });
+  }
+
+  // Récupérer l'admin par son email
+  const sql = `SELECT * FROM admin WHERE email = ?`;
+  db.query(sql, [email], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erreur serveur lors de la requête' });
+    }
+    if (results.length === 0) {
+      return res.status(401).json({ error: 'Admin introuvable' });
+    }
+
+    const admin = results[0];
+
+    // Comparer le mdp saisi avec le mdp hashé stocké
+    bcrypt.compare(mdp, admin.mdp, (err, isMatch) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Erreur de comparaison' });
+      }
+      if (!isMatch) {
+        return res.status(401).json({ error: 'Mot de passe incorrect' });
+      }
+
+      // Connexion réussie
+      res.json({
+        message: 'Connexion admin réussie',
+        admin: {
+          id: admin.Id_Admin,
+          nom: admin.ANom,
+          prenom: admin.APrenom,
+          email: admin.email
+        }
+      });
+    });
+  });
+});
+
+
+
+// =============================================
+// ROUTE INSCRIPTION UTILISATEUR (hash mdp)
+// =============================================
+app.post('/api/users/register', (req, res) => {
+    const { email, mdp, UNom, UPrenom, UAge, UAdress } = req.body;
+  
+    // Vérifier la présence des champs requis (ajuste selon tes besoins)
+    if (!email || !mdp || !UNom || !UPrenom) {
+      return res.status(400).json({ error: 'Paramètres manquants' });
+    }
+  
+    // Hasher le mot de passe
+    bcrypt.hash(mdp, 10, (err, hashedPassword) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Erreur de hachage' });
+      }
+  
+      // Insérer l'utilisateur dans la table "utilisateur"
+      const sql = `INSERT INTO utilisateur (UNom, UPrenom, UAge, UAdress, mdp, email)
+                   VALUES (?, ?, ?, ?, ?, ?)`;
+      const values = [UNom, UPrenom, UAge, UAdress, hashedPassword, email];
+  
+      db.query(sql, values, (err, result) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: 'Erreur serveur lors de l\'insertion' });
+        }
+        res.json({ message: 'Inscription utilisateur réussie !' });
+      });
+    });
+  });
+  
+  // =============================================
+  // ROUTE CONNEXION UTILISATEUR (vérif mdp)
+  // =============================================
+  app.post('/api/users/login', (req, res) => {
+    const { email, mdp } = req.body;
+    if (!email || !mdp) {
+      return res.status(400).json({ error: 'Email et mot de passe requis' });
+    }
+  
+    // Récupérer l'utilisateur par son email
+    const sql = `SELECT * FROM utilisateur WHERE email = ?`;
+    db.query(sql, [email], (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Erreur serveur lors de la requête' });
+      }
+      if (results.length === 0) {
+        return res.status(401).json({ error: 'Utilisateur introuvable' });
+      }
+  
+      const user = results[0];
+  
+      // Comparer le mdp saisi avec le mdp hashé stocké
+      bcrypt.compare(mdp, user.mdp, (err, isMatch) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: 'Erreur de comparaison' });
+        }
+        if (!isMatch) {
+          return res.status(401).json({ error: 'Mot de passe incorrect' });
+        }
+  
+        // Connexion réussie
+        res.json({
+          message: 'Connexion utilisateur réussie',
+          user: {
+            id: user.Id_Utilisateur,
+            nom: user.UNom,
+            prenom: user.UPrenom,
+            email: user.email
+          }
+        });
+      });
+    });
+  });
+
+    // Liste des animaux à adopter
+    app.get('/api/animaux', (req, res) => {
+        const sql = 'SELECT * FROM animal'; 
+
+        db.query(sql, (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Erreur lors de la récupération des animaux' });
+        }
+        return res.json(results);
+        });
+    });
+  
+
+    app.post('/api/admins/animals', (req, res) => {
+        // Dans la vraie vie, tu vérifies si c'est un admin (middleware)
+        const {
+          AnPrenom, AnAge, dateNaiss, AnPuce,
+          LibelEspece, LibelTypeAnimal
+        } = req.body;
+      
+        // 1) Insérer l'animal dans la table `animal`
+        const sqlAnimal = `
+          INSERT INTO animal (AnPrenom, AnAge, dateNaiss, AnPuce)
+          VALUES (?, ?, ?, ?)
+        `;
+      
+        db.query(sqlAnimal, [AnPrenom, AnAge, dateNaiss, AnPuce], (err, result) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Erreur lors de la création de l\'animal' });
+          }
+      
+          const newAnimalId = result.insertId; // L'ID généré pour l'animal
+      
+          // 2) Insérer l'espèce dans la table `espece`
+          const sqlEspece = `
+            INSERT INTO espece (LibelEspece, Id_Animal)
+            VALUES (?, ?)
+          `;
+          db.query(sqlEspece, [LibelEspece, newAnimalId], (err, resultEspece) => {
+            if (err) {
+              console.error(err);
+              return res.status(500).json({ error: 'Erreur lors de la création de l\'espèce' });
+            }
+      
+            // 3) Insérer le type dans la table `typeanimal`
+            const sqlType = `
+              INSERT INTO typeanimal (LibelTypeAnimal, Id_Animal)
+              VALUES (?, ?)
+            `;
+            db.query(sqlType, [LibelTypeAnimal, newAnimalId], (err, resultType) => {
+              if (err) {
+                console.error(err);
+                return res.status(500).json({ error: 'Erreur lors de la création du type animal' });
+              }
+      
+              // Tout s'est bien passé
+              return res.json({ message: 'Animal créé avec succès', Id_Animal: newAnimalId });
+            });
+          });
+        });
+      });
+
+
+      // (optionnel) GET /api/admins/animals => récupérer en détail l'animal + espece + type
+app.get('/api/admins/animals', (req, res) => {
+    const sql = `
+      SELECT a.*, e.LibelEspece, t.LibelTypeAnimal
+      FROM animal a
+      LEFT JOIN espece e ON a.Id_Animal = e.Id_Animal
+      LEFT JOIN typeanimal t ON a.Id_Animal = t.Id_Animal
+    `;
+    db.query(sql, (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Erreur lors de la récupération des animaux' });
+      }
+      res.json(results);
+    });
+  });
+  
+
+
+  app.put('/api/admins/animals/:id', (req, res) => {
+    const animalId = req.params.id;
+    const {
+      AnPrenom, AnAge, dateNaiss, AnPuce,
+      LibelEspece, LibelTypeAnimal
+    } = req.body;
+  
+    // Mettre à jour l'animal
+    const sqlAnimal = `UPDATE animal
+      SET AnPrenom = ?, AnAge = ?, dateNaiss = ?, AnPuce = ?
+      WHERE Id_Animal = ?
+    `;
+    db.query(sqlAnimal, [AnPrenom, AnAge, dateNaiss, AnPuce, animalId], (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Erreur mise à jour de l\'animal' });
+      }
+  
+      // Mettre à jour l'espèce
+      const sqlEspece = `
+        UPDATE espece
+        SET LibelEspece = ?
+        WHERE Id_Animal = ?
+      `;
+      db.query(sqlEspece, [LibelEspece, animalId], (err) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: 'Erreur mise à jour de l\'espèce' });
+        }
+  
+        // Màj le type
+        const sqlType = `
+          UPDATE typeanimal
+          SET LibelTypeAnimal = ?
+          WHERE Id_Animal = ?
+        `;
+        db.query(sqlType, [LibelTypeAnimal, animalId], (err) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Erreur mise à jour du type animal' });
+          }
+  
+          res.json({ message: 'Animal mis à jour avec succès' });
+        });
+      });
+    });
+  });
+
+
+  // DELETE /api/admins/animals/:id
+app.delete('/api/admins/animals/:id', (req, res) => {
+    const animalId = req.params.id;
+  
+    // Supprimer dans `typeanimal` et `espece` pour respecter la contrainte
+    const sqlType = `DELETE FROM typeanimal WHERE Id_Animal = ?`;
+    db.query(sqlType, [animalId], (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Erreur suppression du type animal' });
+      }
+  
+      const sqlEspece = `DELETE FROM espece WHERE Id_Animal = ?`;
+      db.query(sqlEspece, [animalId], (err) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: 'Erreur suppression de l\'espèce' });
+        }
+  
+
+        const sqlAnimal = `DELETE FROM animal WHERE Id_Animal = ?`;
+        db.query(sqlAnimal, [animalId], (err) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Erreur suppression de l\'animal' });
+          }
+          res.json({ message: 'Animal supprimé avec succès' });
+        });
+      });
+    });
+  });
+  
+  // Servir les fichiers statiques
+  app.use('/images', express.static(path.join(__dirname, 'public/images')));
+
+  // Upload d'image pour un animal
+  app.post('/api/admins/animals/:id/image', upload.single('image'), (req, res) => {
+    const animalId = req.params.id;
+    // `req.file.filename` => nom généré
+    const imageFilename = req.file.filename;
+    
+    const sql = `UPDATE animal SET image_filename = ? WHERE Id_Animal = ?`;
+    db.query(sql, [imageFilename, animalId], (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Erreur mise à jour image animal' });
+      }
+      res.json({ message: 'Image téléversée avec succès', filename: imageFilename });
+    });
+  });
+  
+
+  // Route d'adoption (côté user)
+app.post('/api/users/adopter', (req, res) => {
+    const { Id_Animal, Id_Utilisateur } = req.body;
+  
+    // Vérifier que l'animal a au moins une consultation
+    const sqlCheck = `
+      SELECT * 
+      FROM effectuer 
+      WHERE Id_Animal = ?
+    `;
+    db.query(sqlCheck, [Id_Animal], (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Erreur server check consultation' });
+      }
+      if (results.length === 0) {
+        // Pas de consultation = pas adoptable
+        return res.status(400).json({ error: 'Animal non adoptable : pas de consultation/vaccination' });
+      }
+  
+      // S'il a une consultation, on peut associer l'animal à l'utilisateur
+      // ex: `UPDATE animal SET Id_Utilisateur = ? WHERE Id_Animal = ?`
+      const sqlAdopt = `
+        UPDATE animal
+        SET Id_Utilisateur = ?
+        WHERE Id_Animal = ?
+      `;
+      db.query(sqlAdopt, [Id_Utilisateur, Id_Animal], (err) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: 'Erreur lors de l\'adoption' });
+        }
+        res.json({ message: 'Animal adopté avec succès' });
+      });
+    });
+  });
+  
+    // GET /api/admins/veterinaires
+    app.get('/api/admins/veterinaires', (req, res) => {
+        const sql = 'SELECT * FROM veterinaire';
+        db.query(sql, (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Erreur lors de la récupération des vétérinaires' });
+        }
+        res.json(results);
+        });
+    });
+    
+    // Route pour récupérer la liste des utilisateurs
+    app.get('/api/admins/utilisateurs', (req, res) => {
+        const sql = 'SELECT Id_Utilisateur, UNom, UPrenom, email FROM utilisateur';
+        db.query(sql, (err, results) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: 'Erreur lors de la récupération des utilisateurs' });
+            }
+            res.json(results);
+        });
+    });
+    
+    // Route d'adoption par l'admin
+    app.post('/api/admins/adopter', (req, res) => {
+        const { Id_Animal, Id_Utilisateur } = req.body;
+        
+        // Vérifier que l'animal existe
+        const checkAnimalSql = 'SELECT * FROM animal WHERE Id_Animal = ?';
+        db.query(checkAnimalSql, [Id_Animal], (err, animalResults) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: 'Erreur lors de la vérification de l\'animal' });
+            }
+
+            if (animalResults.length === 0) {
+                return res.status(404).json({ error: 'Animal non trouvé' });
+            }
+            
+            // Si Id_Utilisateur est fourni, vérifier qu'il existe
+            if (Id_Utilisateur) {
+                const checkUserSql = 'SELECT * FROM utilisateur WHERE Id_Utilisateur = ?';
+                db.query(checkUserSql, [Id_Utilisateur], (err, userResults) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({ error: 'Erreur lors de la vérification de l\'utilisateur' });
+                    }
+
+                    if (userResults.length === 0) {
+                        return res.status(404).json({ error: 'Utilisateur non trouvé' });
+                    }
+                    
+                    // Associer l'animal à l'utilisateur
+                    const adoptSql = 'UPDATE animal SET Id_Utilisateur = ? WHERE Id_Animal = ?';
+                    db.query(adoptSql, [Id_Utilisateur, Id_Animal], (err) => {
+                        if (err) {
+                            console.error(err);
+                            return res.status(500).json({ error: 'Erreur lors de l\'association de l\'animal à l\'utilisateur' });
+                        }
+                        
+                        res.json({ message: 'Animal associé à l\'utilisateur avec succès' });
+                    });
+                });
+            } else {
+                // Si Id_Utilisateur est null, on retire l'association (l'animal redevient adoptable)
+                const removeSql = 'UPDATE animal SET Id_Utilisateur = NULL WHERE Id_Animal = ?';
+                db.query(removeSql, [Id_Animal], (err) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({ error: 'Erreur lors de la suppression de l\'association' });
+                    }
+                    
+                    res.json({ message: 'Animal remis comme adoptable avec succès' });
+                });
+            }
+        });
+    });
+
+    // POST /api/admins/consultations - Créer une consultation et lier à un animal
+    app.post('/api/admins/consultations', (req, res) => {
+        const { Id_Animal, AnPuce, Vaccination, dateVaccPuce, Id_Veterinaire } = req.body;
+
+        // Vérifier que l'animal existe
+        const checkAnimalSql = 'SELECT * FROM animal WHERE Id_Animal = ?';
+        db.query(checkAnimalSql, [Id_Animal], (err, animalResults) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: 'Erreur lors de la vérification de l\'animal' });
+            }
+
+            if (animalResults.length === 0) {
+                return res.status(404).json({ error: 'Animal non trouvé' });
+            }
+
+            // Mettre à jour le numéro de puce de l'animal si fourni
+            if (AnPuce) {
+                const updatePuceSql = 'UPDATE animal SET AnPuce = ? WHERE Id_Animal = ?';
+                db.query(updatePuceSql, [AnPuce, Id_Animal], (err) => {
+                    if (err) {
+                        console.error(err);
+                        // On continue même si l'update de la puce échoue
+                    }
+                });
+            }
+
+            // Créer la consultation
+            const createConsultSql = 'INSERT INTO consultation (Vaccination, dateVaccPuce) VALUES (?, ?)';
+            db.query(createConsultSql, [Vaccination ? 1 : 0, dateVaccPuce], (err, consultResult) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({ error: 'Erreur lors de la création de la consultation' });
+                }
+
+                const consultId = consultResult.insertId;
+
+                // Lier la consultation à l'animal via la table effectuer
+                const effectuerSql = 'INSERT INTO effectuer (Id_Animal, Id_Consultation) VALUES (?, ?)';
+                db.query(effectuerSql, [Id_Animal, consultId], (err) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({ error: 'Erreur lors de la liaison animal-consultation' });
+                    }
+
+                    // Si un vétérinaire est spécifié, l'associer à la consultation
+                    if (Id_Veterinaire) {
+                        const updateVetoSql = 'UPDATE veterinaire SET Id_Consultation = ? WHERE Id_Veterinaire = ?';
+                        db.query(updateVetoSql, [consultId, Id_Veterinaire], (err) => {
+                            if (err) {
+                                console.error(err);
+                                // On continue même si l'update du véto échoue
+                            }
+                        });
+                    }
+
+                    res.json({ 
+                        message: 'Consultation créée avec succès et liée à l\'animal', 
+                        consultId: consultId 
+                    });
+                });
+            });
+        });
+    });
+
+
+    // GET /api/animaux/adoptables
+app.get('/api/animaux/adoptables', (req, res) => {
+  const sql = `
+    SELECT a.*, e.LibelEspece, t.LibelTypeAnimal
+    FROM animal a
+    -- on s'assure qu'il y a au moins une consultation
+    JOIN effectuer ef ON ef.Id_Animal = a.Id_Animal
+    LEFT JOIN espece e ON e.Id_Animal = a.Id_Animal
+    LEFT JOIN typeanimal t ON t.Id_Animal = a.Id_Animal
+    -- pas encore adopté => Id_Utilisateur IS NULL
+    WHERE a.Id_Utilisateur IS NULL
+    GROUP BY a.Id_Animal
+  `;
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des animaux adoptables' });
+    }
+    res.json(results);
+  });
+});
+
+// Route pour envoyer une photo sans commentaire
+app.post('/api/users/photo', uploadUserPhoto.single('photo'), (req, res) => {
+  const { userId, userName, animalName } = req.body;
+  
+  if (!req.file) {
+    return res.status(400).json({ error: 'Aucune photo n\'a été téléchargée' });
+  }
+  
+  const filePath = 'photos_utilisateurs/' + req.file.filename;
+  
+  // Vérifier que l'utilisateur existe et possède bien cet animal
+  const checkSql = `
+    SELECT a.* FROM animal a 
+    WHERE a.Id_Utilisateur = ? AND a.AnPrenom = ?
+  `;
+  
+  db.query(checkSql, [userId, animalName], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erreur lors de la vérification de l\'animal' });
+    }
+    
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Cet animal n\'appartient pas à cet utilisateur ou n\'existe pas' });
+    }
+    
+    // Insérer la photo dans la base de données
+    const insertSql = `
+      INSERT INTO user_photos (userId, userName, animalName, filePath)
+      VALUES (?, ?, ?, ?)
+    `;
+    
+    db.query(insertSql, [userId, userName, animalName, filePath], (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Erreur lors de l\'enregistrement de la photo' });
+      }
+      
+      res.json({ 
+        message: 'Photo téléchargée avec succès',
+        photo: {
+          id: result.insertId,
+          filePath: filePath,
+          animalName: animalName
+        }
+      });
+    });
+  });
+});
+
+// Route pour récupérer les photos d'un utilisateur
+app.get('/api/users/:userId/photos', (req, res) => {
+  const userId = req.params.userId;
+  
+  const sql = 'SELECT * FROM user_photos WHERE userId = ?';
+  db.query(sql, [userId], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des photos' });
+    }
+    
+    res.json(results);
+  });
+});
+
+// Route pour récupérer les animaux adoptés par un utilisateur
+app.get('/api/users/:userId/animals', (req, res) => {
+  const userId = req.params.userId;
+  
+  const sql = `
+    SELECT DISTINCT a.Id_Animal, a.AnPrenom, a.AnAge, a.dateNaiss, a.AnPuce, a.Id_Utilisateur,
+           a.image_path, a.image_filename, e.LibelEspece, t.LibelTypeAnimal
+    FROM animal a
+    LEFT JOIN espece e ON a.Id_Animal = e.Id_Animal
+    LEFT JOIN typeanimal t ON a.Id_Animal = t.Id_Animal
+    WHERE a.Id_Utilisateur = ?
+    GROUP BY a.Id_Animal
+  `;
+  
+  db.query(sql, [userId], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des animaux adoptés' });
+    }
+    
+    res.json(results);
+  });
+});
+
+// Route pour que les admins puissent voir toutes les photos uploadées par les utilisateurs
+app.get('/api/admins/photos', (req, res) => {
+  const sql = `
+    SELECT p.*, a.Id_Animal 
+    FROM user_photos p
+    JOIN animal a ON a.AnPrenom = p.animalName AND a.Id_Utilisateur = p.userId
+    ORDER BY p.id DESC
+  `;
+  
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des photos' });
+    }
+    
+    res.json(results);
+  });
+});
+
+// Servir les images statiques
+app.use('/photos_utilisateurs', express.static(path.join(__dirname, 'public/photos_utilisateurs')));
+
+// =============================================
+// ROUTES POUR LES VÉTÉRINAIRES
+// =============================================
+
+// Récupérer tous les vétérinaires avec leurs consultations associées
+app.get('/api/veterinaires', (req, res) => {
+  const sql = 'SELECT v.*, c.dateVaccPuce, c.Vaccination FROM veterinaire v LEFT JOIN consultation c ON v.Id_Consultation = c.Id_Consultation ORDER BY v.NomMedecin';
+  
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des vétérinaires' });
+    }
+    
+    return res.json(results);
+  });
+});
+
+// Récupérer un vétérinaire par son ID
+app.get('/api/veterinaires/:id', (req, res) => {
+  const sql = 'SELECT v.*, c.dateVaccPuce, c.Vaccination FROM veterinaire v LEFT JOIN consultation c ON v.Id_Consultation = c.Id_Consultation WHERE v.Id_Veterinaire = ?';
+  
+  db.query(sql, [req.params.id], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erreur lors de la récupération du vétérinaire' });
+    }
+    
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Vétérinaire non trouvé' });
+    }
+    
+    return res.json(results[0]);
+  });
+});
+
+// Récupérer toutes les consultations pour la liste déroulante
+app.get('/api/consultations', (req, res) => {
+  const sql = 'SELECT * FROM consultation ORDER BY Id_Consultation';
+  
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des consultations' });
+    }
+    
+    return res.json(results);
+  });
+});
+
+// Ajouter un nouveau vétérinaire
+app.post('/api/veterinaires', (req, res) => {
+  const { NomMedecin, Id_Consultation } = req.body;
+  
+  // Validation des champs requis
+  if (!NomMedecin) {
+    return res.status(400).json({ error: 'Le nom du médecin est obligatoire' });
+  }
+  
+  // Insertion du vétérinaire
+  const insertSql = 'INSERT INTO veterinaire (NomMedecin, Id_Consultation) VALUES (?, ?)';
+  
+  db.query(insertSql, [NomMedecin, Id_Consultation || null], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erreur lors de l\'ajout du vétérinaire' });
+    }
+    
+    // Récupérer le vétérinaire créé
+    const getVetSql = 'SELECT v.*, c.dateVaccPuce, c.Vaccination FROM veterinaire v LEFT JOIN consultation c ON v.Id_Consultation = c.Id_Consultation WHERE v.Id_Veterinaire = ?';
+    
+    db.query(getVetSql, [result.insertId], (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ 
+          error: 'Erreur lors de la récupération du vétérinaire créé', 
+          veterinaire_id: result.insertId 
+        });
+      }
+      
+      return res.status(201).json({
+        message: 'Vétérinaire ajouté avec succès',
+        veterinaire: results[0]
+      });
+    });
+  });
+});
+
+// Mettre à jour un vétérinaire
+app.put('/api/veterinaires/:id', (req, res) => {
+  const vetId = req.params.id;
+  const { NomMedecin, Id_Consultation } = req.body;
+  
+  // Validation des champs requis
+  if (!NomMedecin) {
+    return res.status(400).json({ error: 'Le nom du médecin est obligatoire' });
+  }
+  
+  // Mise à jour du vétérinaire
+  const updateSql = 'UPDATE veterinaire SET NomMedecin = ?, Id_Consultation = ? WHERE Id_Veterinaire = ?';
+  
+  db.query(updateSql, [NomMedecin, Id_Consultation || null, vetId], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erreur lors de la mise à jour du vétérinaire' });
+    }
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Vétérinaire non trouvé' });
+    }
+    
+    return res.json({ message: 'Vétérinaire mis à jour avec succès' });
+  });
+});
+
+// Supprimer un vétérinaire
+app.delete('/api/veterinaires/:id', (req, res) => {
+  const vetId = req.params.id;
+  
+  const deleteSql = 'DELETE FROM veterinaire WHERE Id_Veterinaire = ?';
+  
+  db.query(deleteSql, [vetId], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erreur lors de la suppression du vétérinaire' });
+    }
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Vétérinaire non trouvé' });
+    }
+    
+    return res.json({ message: 'Vétérinaire supprimé avec succès' });
+  });
+});
+
+// Récupérer les vétérinaires par consultation
+app.get('/api/consultations/:id/veterinaires', (req, res) => {
+  const consultationId = req.params.id;
+  const sql = 'SELECT * FROM veterinaire WHERE Id_Consultation = ?';
+  
+  db.query(sql, [consultationId], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des vétérinaires par consultation' });
+    }
+    
+    return res.json(results);
+  });
+});
+
+// =============================================
+// Lancement du serveur
+// =============================================
+app.listen(3000, () => {
+  console.log('API démarrée sur http://localhost:3000');
+});
